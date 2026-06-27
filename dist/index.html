@@ -1,0 +1,2080 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小t的菜单 - 虚拟大厨点菜App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Inter:wght@700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Variables ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --gradient-primary: linear-gradient(135deg, #F9A57A 0%, #EA4799 100%);
+  --gradient-orange: linear-gradient(135deg, #FFD8BA 0%, #F9A57A 100%);
+  --gradient-green: linear-gradient(135deg, #DDEDD8 0%, #99CC8C 100%);
+  --color-bg: #FFFFFF;
+  --color-text: #000000;
+  --color-gray: #9CA3AF;
+  --color-card-bg: #F2F2F7;
+  --color-item-bg: #F7F7F7;
+  --color-border: #E0E0E5;
+  --font-header: 'Fredoka', sans-serif;
+  --font-body: 'Nunito', sans-serif;
+  --font-status: 'Inter', sans-serif;
+  --font-emoji: 'Sarasa Gothic SC', 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #EEEFF2;
+  font-family: var(--font-body);
+}
+
+/* ── Phone Frame ── */
+.phone {
+  width: 390px;
+  height: 844px;
+  background: var(--color-bg);
+  border-radius: 40px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+}
+
+/* ── Page Container ── */
+.page {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.page.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ── Brand Header ── */
+.brand-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  flex-shrink: 0;
+  padding: 6px 0 0 0;
+}
+.brand-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #F9A57A 0%, #EA4799 50%, #FF6B6B 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 1px;
+}
+
+/* ── NavBar ── */
+.navbar {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  height: 56px;
+  flex-shrink: 0;
+  gap: 6px;
+}
+.navbar .nav-title {
+  font-family: var(--font-header);
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--color-text);
+}
+.navbar .nav-icon {
+  font-family: var(--font-emoji);
+  font-size: 22px;
+  line-height: 1;
+}
+.navbar.navbar-b {
+  height: 52px;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+.navbar.navbar-b .nav-title {
+  font-size: 20px;
+}
+.navbar.navbar-b .nav-icon {
+  font-size: 20px;
+}
+.navbar .add-btn {
+  width: 36px; height: 36px;
+  background: var(--gradient-primary);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: var(--font-status);
+  font-size: 22px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  line-height: 1;
+}
+
+/* ── Content Area ── */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 20px;
+}
+.content::-webkit-scrollbar{display:none}
+
+/* ── Chef Card ── */
+.chef-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: var(--color-bg);
+  border: 1.5px solid var(--color-card-bg);
+  border-radius: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.chef-card:hover {
+  border-color: #F9A57A;
+  box-shadow: 0 4px 12px rgba(249,165,122,0.2);
+}
+.chef-card.selected {
+  border-color: #F9A57A;
+  background: #FFF5F0;
+  box-shadow: 0 4px 16px rgba(249,165,122,0.25);
+}
+.chef-img {
+  width: 88px; height: 88px;
+  border-radius: 20px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.chef-img-placeholder {
+  width: 88px; height: 88px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+.chef-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.chef-name {
+  font-family: var(--font-header);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--color-text);
+}
+.chef-role {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--color-text);
+}
+.chef-tag {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-gray);
+}
+/* ── CTA ── */
+.cta-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 0;
+}
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 300px; height: 52px;
+  background: var(--gradient-primary);
+  border-radius: 26px;
+  border: none;
+  font-family: var(--font-header);
+  font-size: 17px;
+  font-weight: 400;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  padding: 0;
+  gap: 6px;
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(234,71,153,0.35);
+}
+.btn-primary:active { transform: scale(0.97); }
+
+/* ── Search Bar ── */
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  margin: 0 16px;
+  padding: 0 16px;
+  background: var(--color-card-bg);
+  border-radius: 22px;
+  flex-shrink: 0;
+}
+.search-bar .s-icon {
+  font-family: var(--font-emoji);
+  font-size: 15px;
+}
+.search-bar .s-placeholder {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-gray);
+}
+
+/* ── Category + Dish Layout ── */
+.main-area {
+  display: flex;
+  flex: 1;
+  gap: 10px;
+  overflow: hidden;
+  padding: 0 16px;
+}
+.cat-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 80px;
+  flex-shrink: 0;
+  padding-top: 4px;
+}
+.cat-item {
+  width: 80px; height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.cat-item.active {
+  background: var(--gradient-primary);
+  color: #FFFFFF;
+}
+.cat-item:not(.active) {
+  background: var(--color-card-bg);
+  color: var(--color-gray);
+  font-weight: 400;
+}
+.cat-item:hover:not(.active) {
+  background: #E8E8ED;
+}
+
+.dish-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+.dish-list::-webkit-scrollbar{display:none}
+
+.dish-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--color-card-bg);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.dish-card:hover {
+  border-color: #F9A57A;
+  background: #FFF5F0;
+}
+.dish-img {
+  width: 60px; height: 60px;
+  border-radius: 14px;
+  flex-shrink: 0;
+}
+.dish-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.dish-name {
+  font-family: var(--font-header);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--color-text);
+}
+.dish-desc {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--color-gray);
+}
+.dish-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.dish-add-btn {
+  width: 28px; height: 28px;
+  background: var(--gradient-primary);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  margin: 0;
+  transition: transform 0.15s ease;
+  position: relative;
+  top: 0;
+}
+.dish-add-btn:active { transform: scale(0.9); }
+
+/* ── Cart Bar ── */
+.cart-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 64px;
+  margin: 0 16px;
+  padding: 0 16px;
+  background: var(--color-card-bg);
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+.cart-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cart-icon {
+  font-family: var(--font-emoji);
+  font-size: 18px;
+}
+.cart-count {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--color-text);
+}
+.cart-total {
+  font-family: var(--font-header);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--color-text);
+  margin-left: 8px;
+}
+.cart-checkout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background: var(--gradient-primary);
+  border-radius: 20px;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 400;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  gap: 4px;
+}
+.cart-checkout:active { transform: scale(0.95); }
+
+/* ── Success Page ── */
+.success-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 0;
+}
+.success-icon {
+  font-family: var(--font-emoji);
+  font-size: 26px;
+}
+.success-title {
+  font-family: var(--font-header);
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--color-text);
+}
+
+/* ── Info Card ── */
+.info-card {
+  background: var(--color-card-bg);
+  border-radius: 18px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 6px;
+}
+.info-row {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-text);
+}
+
+/* ── Order Card ── */
+.order-card {
+  background: var(--color-card-bg);
+  border-radius: 18px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 6px;
+}
+.order-card-title {
+  font-family: var(--font-header);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-text);
+}
+.order-item {
+  background: var(--color-item-bg);
+  border-radius: 10px;
+  padding: 10px;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--color-text);
+}
+
+/* ── Button Row ── */
+.button-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+.btn-outline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 130px; height: 42px;
+  border-radius: 21px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-bg);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--color-text);
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-outline:hover { border-color: #F9A57A; }
+.btn-gradient-sm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 130px; height: 42px;
+  background: var(--gradient-primary);
+  border-radius: 21px;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  color: #fff;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  gap: 4px;
+}
+.btn-gradient-sm:active { transform: scale(0.95); }
+.tip-text {
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-gray);
+  padding-top: 8px;
+}
+
+/* ── Small info card ── */
+.small-info-card {
+  background: var(--color-card-bg);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0 6px;
+}
+.small-info-card .sir {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--color-text);
+}
+
+/* ── Management Page ── */
+.cat-tabs {
+  display: flex;
+  gap: 10px;
+  padding: 0 16px;
+  height: 52px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+.cat-tab {
+  flex: 1; height: 36px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.cat-tab.active {
+  background: var(--gradient-primary);
+  color: #FFFFFF;
+}
+.cat-tab:not(.active) {
+  background: var(--color-card-bg);
+  color: var(--color-gray);
+  font-weight: 400;
+}
+
+.mgmt-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border: 1px solid var(--color-card-bg);
+  border-radius: 16px;
+  transition: all 0.2s ease;
+}
+.mgmt-item:hover {
+  border-color: #F9A57A;
+}
+.mgmt-img {
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  flex-shrink: 0;
+}
+.mgmt-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mgmt-name {
+  font-family: var(--font-header);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--color-text);
+}
+.mgmt-price {
+  font-family: var(--font-header);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-text);
+}
+.mgmt-actions {
+  display: flex;
+  gap: 8px;
+}
+.btn-sm {
+  width: 50px; height: 30px;
+  border-radius: 15px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  font-family: var(--font-emoji);
+  font-size: 11px;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-sm:hover { border-color: #F9A57A; }
+.btn-sm.danger { color: #EF4444; border-color: #FECACA; }
+.btn-sm.danger:hover { background: #FEF2F2; }
+.btn-sm.edit { color: #3B82F6; border-color: #BFDBFE; }
+.btn-sm.edit:hover { background: #EFF6FF; }
+
+.bottom-buttons {
+  display: flex;
+  gap: 12px;
+  padding: 0 16px;
+  flex-shrink: 0;
+}
+.bottom-btn {
+  flex: 1; height: 44px;
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s ease;
+}
+.bottom-btn-outline {
+  border: 1.5px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+.bottom-btn-primary {
+  background: var(--gradient-primary);
+  color: #fff;
+  font-family: var(--font-body);
+}
+
+/* ── History Page ── */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  flex-shrink: 0;
+}
+.filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  font-family: var(--font-emoji);
+  font-size: 12px;
+  color: var(--color-text);
+  cursor: pointer;
+}
+.search-icon-btn {
+  width: 36px; height: 32px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-card-bg);
+  border: none;
+  font-family: var(--font-emoji);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.history-item {
+  background: var(--color-card-bg);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 6px;
+}
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.history-order-no {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--color-text);
+}
+.history-status {
+  font-family: var(--font-emoji);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--color-text);
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: #E8F5E9;
+}
+.history-meta {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-gray);
+}
+.history-amount {
+  font-family: var(--font-header);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--color-text);
+  text-align: right;
+}
+
+.stats-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  margin: 0 6px;
+  background: var(--color-card-bg);
+  border-radius: 16px;
+}
+.stats-label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--color-text);
+}
+.stats-value {
+  font-family: var(--font-header);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-text);
+}
+
+/* ── Bottom Navigation ── */
+.bottom-nav {
+  height: 95px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 21px 21px 21px;
+}
+.nav-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  height: 62px;
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 36px;
+  padding: 4px;
+}
+.nav-tab {
+  flex: 1;
+  height: 54px;
+  border-radius: 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: none;
+  background: transparent;
+}
+.nav-tab.active {
+  background: var(--gradient-primary);
+}
+.nav-tab-icon {
+  font-family: var(--font-emoji);
+  font-size: 18px;
+  line-height: 1;
+  color: var(--color-text);
+  transition: color 0.25s ease;
+}
+.nav-tab.active .nav-tab-icon { color: #FFFFFF; }
+.nav-tab-label {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--color-gray);
+  transition: all 0.25s ease;
+}
+.nav-tab.active .nav-tab-label {
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+/* ── Chef Header (menu page) ── */
+.chef-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: var(--color-bg);
+  flex-shrink: 0;
+}
+.chef-header-img {
+  width: 36px; height: 36px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.chef-header-text {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+.chef-header-name {
+  font-family: var(--font-header);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--color-text);
+}
+
+/* ── Cart Overlay ── */
+.cart-overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.cart-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.cart-panel {
+  width: 100%;
+  max-height: 60%;
+  background: var(--color-bg);
+  border-radius: 24px 24px 0 0;
+  padding: 20px 20px 30px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+.cart-overlay.open .cart-panel {
+  transform: translateY(0);
+}
+.cart-panel-title {
+  font-family: var(--font-header);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--color-text);
+  text-align: center;
+}
+.cart-panel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cart-panel-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: var(--color-card-bg);
+  border-radius: 14px;
+}
+.cart-panel-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.cart-panel-item-name {
+  font-family: var(--font-header);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--color-text);
+}
+.cart-panel-item-price {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--color-gray);
+}
+.cart-panel-item-del {
+  width: 28px; height: 28px;
+  border-radius: 14px;
+  border: none;
+  background: #FEF2F2;
+  color: #EF4444;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.cart-panel-item-del:hover {
+  background: #FEE2E2;
+}
+.cart-panel-empty {
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-gray);
+  padding: 30px 0;
+}
+.cart-panel-close {
+  width: 100%;
+  height: 44px;
+  border-radius: 22px;
+  background: var(--gradient-primary);
+  border: none;
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.cart-count-btn {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+  padding: 4px 10px;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cart-count-btn:hover {
+  background: rgba(0,0,0,0.05);
+}
+.cart-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px; height: 22px;
+  background: var(--gradient-primary);
+  border-radius: 11px;
+  color: #fff;
+  font-family: var(--font-status);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0 6px;
+  box-shadow: 0 2px 8px rgba(234,71,153,0.35);
+}
+.cart-icon-wrap {
+  position: relative;
+  display: inline-flex;
+}
+.cart-icon-dot {
+  position: absolute;
+  top: -4px; right: -6px;
+  width: 16px; height: 16px;
+  background: #FF3B30;
+  border-radius: 8px;
+  border: 2px solid #fff;
+  display: none;
+  font-family: var(--font-status);
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 13px;
+  text-align: center;
+}
+.cart-icon-dot.show {
+  display: block;
+}
+
+/* ── Add Dish Modal ── */
+.add-dish-overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.add-dish-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.add-dish-modal {
+  width: 320px;
+  background: var(--color-bg);
+  border-radius: 28px;
+  padding: 24px 24px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transform: scale(0.92) translateY(20px);
+  transition: transform 0.28s cubic-bezier(.34,1.56,.64,1);
+}
+.add-dish-overlay.open .add-dish-modal {
+  transform: scale(1) translateY(0);
+}
+.add-dish-modal-title {
+  font-family: var(--font-header);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--color-text);
+  text-align: center;
+}
+.add-dish-img-upload {
+  width: 100%;
+  height: 120px;
+  border-radius: 18px;
+  background: var(--color-card-bg);
+  border: 2px dashed var(--color-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  transition: border-color 0.2s ease;
+}
+.add-dish-img-upload:hover {
+  border-color: #F9A57A;
+}
+.add-dish-img-upload img {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 16px;
+}
+.add-dish-img-upload .upload-hint {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--color-gray);
+  text-align: center;
+  z-index: 1;
+  pointer-events: none;
+}
+.add-dish-img-upload input[type="file"] {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.add-dish-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.add-dish-label {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+.add-dish-input {
+  height: 42px;
+  border-radius: 14px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-card-bg);
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text);
+  padding: 0 14px;
+  outline: none;
+  transition: border-color 0.2s ease;
+  width: 100%;
+}
+.add-dish-input:focus {
+  border-color: #F9A57A;
+}
+.add-dish-modal-btns {
+  display: flex;
+  gap: 10px;
+}
+.add-dish-cancel {
+  flex: 1; height: 42px;
+  border-radius: 21px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-bg);
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.add-dish-cancel:hover { border-color: #F9A57A; }
+.add-dish-confirm {
+  flex: 1; height: 42px;
+  border-radius: 21px;
+  border: none;
+  background: var(--gradient-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.add-dish-confirm:active { transform: scale(0.96); }
+</style>
+<!-- 开发阶段：test_data.js 是单一数据源，后端动态读取它；前端用它做兜底 -->
+<script src="test_data.js?v=20260627"></script>
+<script src="data.js?v=20260627"></script>
+</head>
+<body>
+
+<div class="phone">
+
+<!-- ═══════════ Page 1: 选择虚拟大厨 ═══════════ -->
+<section class="page active" data-page="chef">
+  <div class="brand-header">
+    <span class="brand-title">小t的菜单</span>
+  </div>
+  <div class="navbar">
+    <span class="nav-title">选择你的专属大厨</span>
+    <span class="nav-icon">👨‍🍳</span>
+  </div>
+  <div class="content">
+    <div id="chef-list"><!-- rendered by initApp() --></div>
+    <div class="cta-area">
+      <button class="btn-primary" onclick="switchPage('menu')"><span style="display:inline-block;vertical-align:middle">就决定是你了！</span><span style="display:inline-block;vertical-align:middle">✨</span></button>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <div class="nav-pill">
+      <button class="nav-tab active" onclick="switchPage('chef')">
+        <span class="nav-tab-icon">🍽️</span>
+        <span class="nav-tab-label">点菜</span>
+      </button>
+      <button class="nav-tab" onclick="switchPage('success')">
+        <span class="nav-tab-icon">📋</span>
+        <span class="nav-tab-label">订单</span>
+      </button>
+      <button class="nav-tab" onclick="switchPage('manage')">
+        <span class="nav-tab-icon">🍳</span>
+        <span class="nav-tab-label">菜品管理</span>
+      </button>
+    </div>
+  </nav>
+</section>
+
+<!-- ═══════════ Page 2: 菜单浏览页 ═══════════ -->
+<section class="page" data-page="menu">
+  <div class="brand-header">
+    <span class="brand-title">小t的菜单</span>
+  </div>
+  <div class="chef-header" id="menu-chef-header">
+    <img class="chef-header-img" id="menu-chef-img" src="assets/images/2_68.png" alt="大厨">
+    <span class="chef-header-text">本次选择大厨为</span>
+    <span class="chef-header-name" id="menu-chef-name">水豚噜噜</span>
+  </div>
+  <div class="search-bar" style="margin-top:0">
+    <span class="s-icon">🔍</span>
+    <span class="s-placeholder">找找好吃的~</span>
+  </div>
+  <div class="main-area">
+    <div class="cat-nav">
+      <div class="cat-item active" onclick="switchCat(this,'all')">所有菜品</div>
+      <div class="cat-item" onclick="switchCat(this,'soup')">汤品🥣</div>
+      <div class="cat-item" onclick="switchCat(this,'meat')">荤菜🍖</div>
+      <div class="cat-item" onclick="switchCat(this,'veg')">素菜🥬</div>
+    </div>
+    <div class="dish-list" id="menu-dish-list">
+      <!-- dish cards rendered by initApp() -->
+    </div>
+  </div>
+  <div class="cart-bar">
+    <div class="cart-left">
+      <span class="cart-icon-wrap">
+        <span class="cart-icon">🛒</span>
+        <span class="cart-icon-dot" id="cart-icon-dot"></span>
+      </span>
+      <button class="cart-count-btn" id="cart-count-btn" onclick="openCartPanel()">
+        <span class="cart-badge" id="cart-badge">0</span>
+        已选菜
+      </button>
+      <span class="cart-total" id="cart-total">¥0.00</span>
+    </div>
+    <button class="cart-checkout" onclick="goCheckout()"><span style="display:inline-block;vertical-align:middle">去结算</span><span style="display:inline-block;vertical-align:middle">🛒</span></button>
+  </div>
+  <nav class="bottom-nav">
+    <div class="nav-pill">
+      <button class="nav-tab active" onclick="switchPage('chef')">
+        <span class="nav-tab-icon">🍽️</span>
+        <span class="nav-tab-label">点菜</span>
+      </button>
+      <button class="nav-tab" onclick="switchPage('success')">
+        <span class="nav-tab-icon">📋</span>
+        <span class="nav-tab-label">订单</span>
+      </button>
+      <button class="nav-tab" onclick="switchPage('manage')">
+        <span class="nav-tab-icon">🍳</span>
+        <span class="nav-tab-label">菜品管理</span>
+      </button>
+    </div>
+  </nav>
+</section>
+
+<!-- ═══════════ Page 3: 下单成功与订单详情 ═══════════ -->
+<section class="page" data-page="success">
+  <div class="brand-header">
+    <span class="brand-title">小t的菜单</span>
+  </div>
+  <div class="navbar">
+    <span class="nav-title">下单成功</span>
+    <span class="nav-icon">🎉</span>
+  </div>
+  <div class="content" style="gap:14px">
+    <div class="success-header">
+      <span class="success-icon">✅</span>
+      <span class="success-title">下单成功啦！</span>
+    </div>
+    <div class="small-info-card">
+      <span class="sir">🧾 订单号：DD20260627001</span>
+      <span class="sir">🕐 今天 18:00 | 大厨：<span id="order-chef-name">水豚噜噜</span> <span id="order-chef-emoji">🐹</span></span>
+      <span class="sir">⏰ 预计备餐时间：30分钟</span>
+    </div>
+    <div class="info-card">
+      <div class="info-row">🕐 就餐时间：今天 18:00</div>
+      <div class="info-row">👨‍🍳 大厨：<span id="order-chef-name2">水豚噜噜</span></div>
+    </div>
+    <div class="order-card">
+      <span class="order-card-title">已选菜品</span>
+      <div id="order-dish-list">
+        <!-- rendered by updateOrderPage() -->
+      </div>
+    </div>
+    <div class="cta-area">
+      <div class="button-row">
+        <button class="btn-outline" onclick="switchPage('chef')">返回首页</button>
+        <button class="btn-gradient-sm" onclick="clearCartAndReorder()"><span style="display:inline-block;vertical-align:middle">再点一单</span></button>
+      </div>
+    </div>
+    <div class="tip-text">大厨正在为你精心准备哦~ 🥘</div>
+  </div>
+  <nav class="bottom-nav">
+    <div class="nav-pill">
+      <button class="nav-tab" onclick="switchPage('chef')">
+        <span class="nav-tab-icon">🍽️</span>
+        <span class="nav-tab-label">点菜</span>
+      </button>
+      <button class="nav-tab active" onclick="switchPage('success')">
+        <span class="nav-tab-icon">📋</span>
+        <span class="nav-tab-label">订单</span>
+      </button>
+      <button class="nav-tab" onclick="switchPage('manage')">
+        <span class="nav-tab-icon">🍳</span>
+        <span class="nav-tab-label">菜品管理</span>
+      </button>
+    </div>
+  </nav>
+</section>
+
+<!-- ═══════════ Page 4: 菜品管理页 ═══════════ -->
+<section class="page" data-page="manage">
+  <div class="brand-header">
+    <span class="brand-title">小t的菜单</span>
+  </div>
+  <div class="navbar navbar-b">
+    <span class="nav-title">菜品管理</span>
+  </div>
+  <!-- 管理页分类导航 -->
+  <div style="display:flex;gap:8px;padding:4px 16px 0 16px;flex-shrink:0">
+    <div class="cat-tab active" onclick="switchMgmtCat(this,'all')">所有菜品</div>
+    <div class="cat-tab" onclick="switchMgmtCat(this,'soup')">汤品🥣</div>
+    <div class="cat-tab" onclick="switchMgmtCat(this,'meat')">荤菜🍖</div>
+    <div class="cat-tab" onclick="switchMgmtCat(this,'veg')">素菜🥬</div>
+  </div>
+
+  <!-- 菜品列表 + 新增按钮（可滚动区域） -->
+  <div class="content" id="mgmt-list">
+    <div id="mgmt-dish-list">
+      <!-- mgmt items rendered by initApp() -->
+    </div>
+    <!-- 新增菜品按钮跟随在菜品列表下方 -->
+    <div style="display:flex;justify-content:center;padding:8px 0 4px 0">
+      <button class="btn-primary" style="width:160px;height:44px;font-size:15px" onclick="openAddDishModal()">
+        <span style="display:inline-block;vertical-align:middle">新增菜品</span><span style="display:inline-block;vertical-align:middle;margin-left:4px">+</span>
+      </button>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="nav-pill">
+      <button class="nav-tab" onclick="switchPage('chef')">
+        <span class="nav-tab-icon">🍽️</span>
+        <span class="nav-tab-label">点菜</span>
+      </button>
+      <button class="nav-tab" onclick="switchPage('success')">
+        <span class="nav-tab-icon">📋</span>
+        <span class="nav-tab-label">订单</span>
+      </button>
+      <button class="nav-tab active" onclick="switchPage('manage')">
+        <span class="nav-tab-icon">🍳</span>
+        <span class="nav-tab-label">菜品管理</span>
+      </button>
+    </div>
+  </nav>
+</section>
+
+<!-- ═══════════ Page 5: 历史订单页 ═══════════ -->
+<section class="page" data-page="history">
+  <div class="brand-header">
+    <span class="brand-title">小t的菜单</span>
+  </div>
+  <div class="navbar navbar-b">
+    <span class="nav-title">历史订单</span>
+    <span class="nav-icon">📚</span>
+  </div>
+  <div class="filter-bar">
+    <button class="filter-btn">📅 全部时间</button>
+    <button class="search-icon-btn">🔍</button>
+  </div>
+  <div class="content">
+    <div class="history-item">
+      <div class="history-header">
+        <span class="history-order-no">#DD20260625001</span>
+        <span class="history-status">已完成</span>
+      </div>
+      <span class="history-meta">06-25 12:30 | 3道菜</span>
+    </div>
+  </div>
+  <div class="stats-bar">
+    <span class="stats-label">总订单数：128单</span>
+  </div>
+  <nav class="bottom-nav">
+    <div class="nav-pill">
+      <button class="nav-tab" onclick="switchPage('chef')">
+        <span class="nav-tab-icon">🍽️</span>
+        <span class="nav-tab-label">点菜</span>
+      </button>
+      <button class="nav-tab active" onclick="switchPage('history')">
+        <span class="nav-tab-icon">📋</span>
+        <span class="nav-tab-label">订单</span>
+      </button>
+      <button class="nav-tab" onclick="switchPage('manage')">
+        <span class="nav-tab-icon">🍳</span>
+        <span class="nav-tab-label">菜品管理</span>
+      </button>
+    </div>
+  </nav>
+</section>
+
+</div><!-- /phone -->
+
+<!-- Add Dish Modal -->
+<div class="add-dish-overlay" id="add-dish-overlay" onclick="closeAddDishModal(event)">
+  <div class="add-dish-modal" onclick="event.stopPropagation()">
+    <span class="add-dish-modal-title" id="add-dish-modal-title">🍴 新增菜品</span>
+    <!-- 图片上传区 -->
+    <div class="add-dish-img-upload" id="add-dish-img-upload">
+      <span class="upload-hint">📷<br>点击上传菜品图片</span>
+      <input type="file" accept="image/*" id="add-dish-file-input" onchange="previewDishImg(event)">
+    </div>
+    <!-- 菜名输入 -->
+    <div class="add-dish-input-group">
+      <span class="add-dish-label">菜品名称 <span style="color:#EF4444">*</span></span>
+      <input class="add-dish-input" id="add-dish-name-input" type="text" placeholder="输入菜品名称，如：红烧肉">
+    </div>
+    <!-- 金额输入 -->
+    <div class="add-dish-input-group">
+      <span class="add-dish-label">菜品金额 <span style="color:#EF4444">*</span></span>
+      <input class="add-dish-input" id="add-dish-price-input" type="number" min="0" step="0.1" placeholder="输入价格，如：18">
+    </div>
+    <!-- 分类选择 -->
+    <div class="add-dish-input-group">
+      <span class="add-dish-label">菜品分类</span>
+      <select class="add-dish-input" id="add-dish-cat-select">
+        <option value="soup">汤品 🥣</option>
+        <option value="meat">荤菜 🍖</option>
+        <option value="veg">素菜 🥬</option>
+      </select>
+    </div>
+    <!-- 操作按钮 -->
+    <div class="add-dish-modal-btns">
+      <button class="add-dish-cancel" onclick="closeAddDishModal()">取消</button>
+      <button class="add-dish-confirm" id="add-dish-confirm-btn" onclick="confirmAddDish()">确认添加</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cart Overlay -->
+<div class="cart-overlay" id="cart-overlay" onclick="closeCartPanel(event)">
+  <div class="cart-panel" onclick="event.stopPropagation()">
+    <span class="cart-panel-title">🛒 已选菜品</span>
+    <div class="cart-panel-list" id="cart-panel-list">
+      <div class="cart-panel-empty">购物车是空的，快去选菜吧~</div>
+    </div>
+    <button class="cart-panel-close" onclick="closeCartPanel()">关 闭</button>
+  </div>
+</div>
+
+<script>
+// ── Data Helpers ──
+function getChefById(id) { return CHEFS.find(c => c.id === id); }
+function getDishById(id) { return DISHES.find(d => d.id === id); }
+
+// ── App State ──
+const appState = {
+  selectedChef: DEFAULT_STATE.selectedChef,
+  cart: []
+};
+
+// ── Page Switching ──
+function switchPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.querySelector(`[data-page="${name}"]`);
+  if (target) target.classList.add('active');
+
+  // Update nav tabs across all pages
+  const navMap = {
+    chef: 0, menu: 0,
+    success: 1, history: 1,
+    manage: 2
+  };
+  const activeIdx = navMap[name] ?? 0;
+
+  document.querySelectorAll('.nav-pill').forEach(pill => {
+    const tabs = pill.querySelectorAll('.nav-tab');
+    tabs.forEach((t, i) => t.classList.toggle('active', i === activeIdx));
+  });
+
+  // Page-specific actions
+  if (name === 'menu') {
+    updateChefHeader();
+    updateCartBar();
+  }
+  if (name === 'success') {
+    updateOrderPage();
+  }
+}
+
+// ── Chef Selection ──
+function selectChef(el) {
+  document.querySelectorAll('.chef-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  appState.selectedChef = el.getAttribute('data-chef');
+}
+
+function updateChefHeader() {
+  const chef = getChefById(appState.selectedChef);
+  if (!chef) return;
+  document.getElementById('menu-chef-img').src = chef.img;
+  document.getElementById('menu-chef-name').textContent = chef.name;
+}
+
+// ── Category Switching (works for both menu & management pages) ──
+function switchCat(el, cat) {
+  el.parentElement.querySelectorAll('.cat-item').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+
+  // Find all items with data-cat attribute in the current page
+  const page = el.closest('.page');
+  const items = page.querySelectorAll('[data-cat]');
+  items.forEach(d => {
+    if (cat === 'all' || d.getAttribute('data-cat') === cat) {
+      d.style.display = 'flex';
+    } else {
+      d.style.display = 'none';
+    }
+  });
+}
+
+// ── Cart Logic ──
+function addToCart(name, price) {
+  appState.cart.push({ name, price });
+  updateCartBar();
+}
+
+function removeFromCart(index) {
+  appState.cart.splice(index, 1);
+  updateCartBar();
+  renderCartPanel();
+}
+
+function updateCartBar() {
+  const count = appState.cart.length;
+  const total = appState.cart.reduce((sum, item) => sum + item.price, 0);
+  
+  const countBtn = document.getElementById('cart-count-btn');
+  if (countBtn) countBtn.innerHTML = `<span class="cart-badge">${count}</span> 已选菜`;
+  
+  const totalEl = document.getElementById('cart-total');
+  if (totalEl) totalEl.textContent = `¥${total.toFixed(2)}`;
+
+  // Update badge in the button (already handled above via innerHTML)
+  const badge = document.getElementById('cart-badge');
+  if (badge) badge.textContent = count;
+
+  // Update red dot on cart icon
+  const dot = document.getElementById('cart-icon-dot');
+  if (dot) {
+    if (count > 0) {
+      dot.textContent = count > 9 ? '9+' : count;
+      dot.classList.add('show');
+    } else {
+      dot.classList.remove('show');
+    }
+  }
+}
+
+function openCartPanel() {
+  renderCartPanel();
+  document.getElementById('cart-overlay').classList.add('open');
+}
+
+function closeCartPanel(e) {
+  if (e && e.target !== document.getElementById('cart-overlay')) return;
+  document.getElementById('cart-overlay').classList.remove('open');
+}
+
+function renderCartPanel() {
+  const list = document.getElementById('cart-panel-list');
+  if (!list) return;
+
+  if (appState.cart.length === 0) {
+    list.innerHTML = '<div class="cart-panel-empty">购物车是空的，快去选菜吧~</div>';
+    return;
+  }
+
+  list.innerHTML = appState.cart.map((item, i) => `
+    <div class="cart-panel-item">
+      <div class="cart-panel-item-info">
+        <span class="cart-panel-item-name">${item.name}</span>
+        <span class="cart-panel-item-price">¥${item.price.toFixed(2)}</span>
+      </div>
+      <button class="cart-panel-item-del" onclick="removeFromCart(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+function goCheckout() {
+  if (appState.cart.length === 0) {
+    alert('请先选择菜品再结算哦~');
+    return;
+  }
+  switchPage('success');
+}
+
+function clearCartAndReorder() {
+  // Keep cart items — just navigate back to menu
+  switchPage('menu');
+}
+
+// ── Order Page ──
+function updateOrderPage() {
+  const chef = getChefById(appState.selectedChef);
+  if (!chef) return;
+
+  // Update chef name in order page
+  const chefEls = document.querySelectorAll('#order-chef-name, #order-chef-name2');
+  chefEls.forEach(el => { el.textContent = chef.name; });
+
+  // Update emoji
+  const emojiEl = document.getElementById('order-chef-emoji');
+  if (emojiEl) emojiEl.textContent = chef.emoji;
+
+  // Update dish list
+  const dishList = document.getElementById('order-dish-list');
+  if (!dishList) return;
+
+  if (appState.cart.length === 0) {
+    dishList.innerHTML = '<div class="order-item">暂无菜品</div>';
+  } else {
+    dishList.innerHTML = appState.cart.map(item => 
+      `<div class="order-item">${item.name}</div>`
+    ).join('');
+  }
+}
+// ── Add Dish Modal ──
+let _addDishImgDataUrl = null;  // stores base64 of uploaded image
+let _editDishId = null;         // non-null when editing
+let _editDishOldName = null;    // for cart sync on name change
+
+function openAddDishModal() {
+  // reset to add mode
+  _editDishId = null;
+  _editDishOldName = null;
+  _addDishImgDataUrl = null;
+  document.getElementById('add-dish-name-input').value = '';
+  document.getElementById('add-dish-price-input').value = '';
+  document.getElementById('add-dish-cat-select').value = 'soup';
+  document.getElementById('add-dish-file-input').value = '';
+  document.getElementById('add-dish-name-input').style.borderColor = '';
+  document.getElementById('add-dish-price-input').style.borderColor = '';
+  document.getElementById('add-dish-modal-title').textContent = '🍴 新增菜品';
+  document.getElementById('add-dish-confirm-btn').textContent = '确认添加';
+  // reset preview
+  const uploadArea = document.getElementById('add-dish-img-upload');
+  const existing = uploadArea.querySelector('img');
+  if (existing) existing.remove();
+  const hint = uploadArea.querySelector('.upload-hint');
+  if (hint) hint.style.display = '';
+
+  document.getElementById('add-dish-overlay').classList.add('open');
+}
+
+function openEditDish(dishId) {
+  _editDishId = dishId;
+  _addDishImgDataUrl = null;
+
+  // Read current values from manage page item
+  const mgmtItem = document.querySelector(`.mgmt-item[data-dish="${dishId}"]`);
+  if (!mgmtItem) return;
+
+  const nameEl = mgmtItem.querySelector('.mgmt-name');
+  const priceEl = mgmtItem.querySelector('.mgmt-price');
+  const cat = mgmtItem.getAttribute('data-cat');
+  const name = nameEl ? nameEl.textContent.trim() : '';
+  const priceText = priceEl ? priceEl.textContent.trim().replace('¥', '') : '0';
+  _editDishOldName = name;
+
+  // Also read image from the corresponding dish-card
+  const dishCard = document.querySelector(`.dish-card[data-dish="${dishId}"]`);
+  const dishImg = dishCard ? dishCard.querySelector('.dish-img img') : null;
+  if (dishImg) {
+    _addDishImgDataUrl = dishImg.src;
+  }
+
+  // Pre-fill form
+  document.getElementById('add-dish-name-input').value = name;
+  document.getElementById('add-dish-price-input').value = priceText;
+  document.getElementById('add-dish-cat-select').value = cat;
+  document.getElementById('add-dish-file-input').value = '';
+  document.getElementById('add-dish-name-input').style.borderColor = '';
+  document.getElementById('add-dish-price-input').style.borderColor = '';
+  document.getElementById('add-dish-modal-title').textContent = '✏️ 编辑菜品';
+  document.getElementById('add-dish-confirm-btn').textContent = '保存修改';
+
+  // Set image preview
+  const uploadArea = document.getElementById('add-dish-img-upload');
+  const existing = uploadArea.querySelector('img');
+  if (existing) existing.remove();
+  const hint = uploadArea.querySelector('.upload-hint');
+  if (_addDishImgDataUrl) {
+    if (hint) hint.style.display = 'none';
+    const img = document.createElement('img');
+    img.src = _addDishImgDataUrl;
+    uploadArea.appendChild(img);
+  } else {
+    if (hint) hint.style.display = '';
+  }
+
+  document.getElementById('add-dish-overlay').classList.add('open');
+}
+
+function closeAddDishModal(e) {
+  if (e && e.target !== document.getElementById('add-dish-overlay')) return;
+  document.getElementById('add-dish-overlay').classList.remove('open');
+  _editDishId = null;
+  _editDishOldName = null;
+}
+
+function previewDishImg(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    _addDishImgDataUrl = e.target.result;
+    const uploadArea = document.getElementById('add-dish-img-upload');
+    const hint = uploadArea.querySelector('.upload-hint');
+    if (hint) hint.style.display = 'none';
+    let img = uploadArea.querySelector('img');
+    if (!img) {
+      img = document.createElement('img');
+      uploadArea.appendChild(img);
+    }
+    img.src = _addDishImgDataUrl;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function confirmAddDish() {
+  // If editing, delegate to saveEditDish
+  if (_editDishId) {
+    saveEditDish();
+    return;
+  }
+
+  const name = document.getElementById('add-dish-name-input').value.trim();
+  const priceRaw = document.getElementById('add-dish-price-input').value.trim();
+  const cat = document.getElementById('add-dish-cat-select').value;
+
+  // ─── 必填校验 ───
+  let hasError = false;
+  const nameInput = document.getElementById('add-dish-name-input');
+  const priceInput = document.getElementById('add-dish-price-input');
+
+  if (!name) {
+    nameInput.style.borderColor = '#EF4444';
+    nameInput.placeholder = '⚠️ 请填写菜品名称';
+    hasError = true;
+  } else {
+    nameInput.style.borderColor = '';
+  }
+
+  const priceNum = parseFloat(priceRaw);
+  if (!priceRaw || isNaN(priceNum) || priceNum < 0) {
+    priceInput.style.borderColor = '#EF4444';
+    priceInput.placeholder = '⚠️ 请填写菜品金额';
+    hasError = true;
+  } else {
+    priceInput.style.borderColor = '';
+  }
+
+  if (hasError) return;
+
+  // Generate unique id
+  const dishId = 'dish_' + Date.now();
+
+  // Decide gradient color
+  const gradients = ['var(--gradient-orange)', 'var(--gradient-green)'];
+  const gradientStyle = gradients[Math.floor(Math.random() * 2)];
+
+  // ★ 先存到数据库
+  try {
+    var savedDish = await apiAddDish({
+      id: dishId,
+      name: name,
+      cat: cat,
+      price: priceNum,
+      desc: '美味新品~',
+      gradient: gradientStyle,
+      image: _addDishImgDataUrl || null
+    });
+  } catch (err) {
+    console.error('[新增菜品] 保存失败:', err.message);
+    alert('保存失败，请检查后端是否启动: ' + err.message);
+    return;
+  }
+
+  // ─── Add to Data Array ───
+  DISHES.push(savedDish);
+
+  // ─── Add to Manage Page ───
+  const mgmtList = document.getElementById('mgmt-dish-list');
+  const mgmtItem = document.createElement('div');
+  mgmtItem.className = 'mgmt-item';
+  mgmtItem.setAttribute('data-cat', savedDish.cat);
+  mgmtItem.setAttribute('data-dish', savedDish.id);
+  const imgUrl = savedDish.image || '';
+  mgmtItem.innerHTML = `
+    <div class="mgmt-img" style="background:${savedDish.gradient}${imgUrl ? ';overflow:hidden' : ''}">
+      ${imgUrl ? `<img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:14px">` : ''}
+    </div>
+    <div class="mgmt-info">
+      <span class="mgmt-name">${savedDish.name}</span>
+      <span class="mgmt-price">¥${savedDish.price.toFixed(2)}</span>
+    </div>
+    <div class="mgmt-actions">
+      <button class="btn-sm edit" onclick="openEditDish('${savedDish.id}')">编辑</button>
+      <button class="btn-sm danger" onclick="deleteDish('${savedDish.id}')">删除</button>
+    </div>
+  `;
+  mgmtList.appendChild(mgmtItem);
+
+  // ─── Add to Menu Browse Page ───
+  const dishList = document.querySelector('[data-page="menu"] .dish-list');
+  const dishCard = document.createElement('div');
+  dishCard.className = 'dish-card';
+  dishCard.setAttribute('data-cat', savedDish.cat);
+  dishCard.setAttribute('data-dish', savedDish.id);
+  dishCard.innerHTML = `
+    <div class="dish-img" style="background:${savedDish.gradient}${imgUrl ? ';overflow:hidden' : ''}">
+      ${imgUrl ? `<img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:14px">` : ''}
+    </div>
+    <div class="dish-info">
+      <span class="dish-name">${savedDish.name}</span>
+      <span class="dish-desc">${savedDish.desc}</span>
+      <div class="dish-price-row">
+        <span style="font-family:var(--font-header);font-size:15px">¥${savedDish.price.toFixed(2)}</span>
+        <button class="dish-add-btn" onclick="addToCart('${savedDish.name.replace(/'/g, "\\'")}', ${savedDish.price})">+</button>
+      </div>
+    </div>
+  `;
+  dishList.appendChild(dishCard);
+
+  // ─── Close modal ───
+  document.getElementById('add-dish-overlay').classList.remove('open');
+}
+
+// ── Management Page Category Filter ──
+function switchMgmtCat(el, cat) {
+  // Update active tab style (only within the same tab row)
+  el.parentElement.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+
+  // Filter mgmt-items inside #mgmt-dish-list
+  const mgmtList = document.getElementById('mgmt-dish-list');
+  mgmtList.querySelectorAll('.mgmt-item').forEach(item => {
+    if (cat === 'all' || item.getAttribute('data-cat') === cat) {
+      item.style.display = 'flex';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+}
+
+// ── Edit Dish (syncs manage + menu pages + cart) ──
+async function saveEditDish() {
+  const dishId = _editDishId;
+  if (!dishId) return;
+
+  const name = document.getElementById('add-dish-name-input').value.trim();
+  const priceRaw = document.getElementById('add-dish-price-input').value.trim();
+  const cat = document.getElementById('add-dish-cat-select').value;
+
+  // ─── Validation ───
+  let hasError = false;
+  const nameInput = document.getElementById('add-dish-name-input');
+  const priceInput = document.getElementById('add-dish-price-input');
+
+  if (!name) {
+    nameInput.style.borderColor = '#EF4444';
+    nameInput.placeholder = '⚠️ 请填写菜品名称';
+    hasError = true;
+  } else {
+    nameInput.style.borderColor = '';
+  }
+
+  const priceNum = parseFloat(priceRaw);
+  if (!priceRaw || isNaN(priceNum) || priceNum < 0) {
+    priceInput.style.borderColor = '#EF4444';
+    priceInput.placeholder = '⚠️ 请填写菜品金额';
+    hasError = true;
+  } else {
+    priceInput.style.borderColor = '';
+  }
+
+  if (hasError) return;
+
+  // 确定描述文字
+  const dishData = getDishById(dishId);
+  var newDesc = '已编辑~';
+  if (dishData && dishData.desc !== '美味新品~' && dishData.desc !== '已编辑~') {
+    newDesc = dishData.desc;  // 保留用户自定义描述
+  }
+
+  // ★ 先更新数据库
+  var updates = { name: name, cat: cat, price: priceNum, desc: newDesc };
+  if (_addDishImgDataUrl) {
+    updates.image = _addDishImgDataUrl;
+  }
+
+  try {
+    var savedDish = await apiUpdateDish(dishId, updates);
+  } catch (err) {
+    console.error('[编辑菜品] 保存失败:', err.message);
+    alert('保存失败: ' + err.message);
+    return;
+  }
+
+  // ─── Update Data Array ───
+  if (dishData) {
+    dishData.name = savedDish.name;
+    dishData.cat = savedDish.cat;
+    dishData.price = savedDish.price;
+    dishData.desc = savedDish.desc;
+    dishData.image = savedDish.image;
+    dishData.gradient = savedDish.gradient;
+  }
+
+  // ─── Update Manage Page Item ───
+  const mgmtItem = document.querySelector(`.mgmt-item[data-dish="${dishId}"]`);
+  if (mgmtItem) {
+    mgmtItem.setAttribute('data-cat', cat);
+    const nameEl = mgmtItem.querySelector('.mgmt-name');
+    const priceEl = mgmtItem.querySelector('.mgmt-price');
+    const imgDiv = mgmtItem.querySelector('.mgmt-img');
+    if (nameEl) nameEl.textContent = savedDish.name;
+    if (priceEl) priceEl.textContent = `¥${savedDish.price.toFixed(2)}`;
+    if (imgDiv && savedDish.image) {
+      imgDiv.style.overflow = 'hidden';
+      let img = imgDiv.querySelector('img');
+      if (!img) { img = document.createElement('img'); imgDiv.appendChild(img); }
+      img.src = savedDish.image;
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:14px';
+    }
+  }
+
+  // ─── Update Menu Browse Page Item ───
+  const dishCard = document.querySelector(`.dish-card[data-dish="${dishId}"]`);
+  if (dishCard) {
+    dishCard.setAttribute('data-cat', cat);
+    const nameEl2 = dishCard.querySelector('.dish-name');
+    const descEl2 = dishCard.querySelector('.dish-desc');
+    const priceSpan = dishCard.querySelector('.dish-price-row span');
+    const addBtn = dishCard.querySelector('.dish-add-btn');
+    const imgDiv2 = dishCard.querySelector('.dish-img');
+    if (nameEl2) nameEl2.textContent = savedDish.name;
+    if (descEl2) descEl2.textContent = savedDish.desc;
+    if (priceSpan) priceSpan.textContent = `¥${savedDish.price.toFixed(2)}`;
+    if (addBtn) addBtn.setAttribute('onclick', `addToCart('${savedDish.name.replace(/'/g, "\\'")}', ${savedDish.price})`);
+    if (imgDiv2 && savedDish.image) {
+      imgDiv2.style.overflow = 'hidden';
+      let img2 = imgDiv2.querySelector('img');
+      if (!img2) { img2 = document.createElement('img'); imgDiv2.appendChild(img2); }
+      img2.src = savedDish.image;
+      img2.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:14px';
+    }
+  }
+
+  // ─── Sync Cart (if name or price changed) ───
+  if (_editDishOldName && (_editDishOldName !== savedDish.name)) {
+    appState.cart = appState.cart.map(item => {
+      if (item.name === _editDishOldName) {
+        return { name: savedDish.name, price: savedDish.price };
+      }
+      return item;
+    });
+  } else if (_editDishOldName) {
+    appState.cart = appState.cart.map(item => {
+      if (item.name === _editDishOldName) {
+        return { name: item.name, price: savedDish.price };
+      }
+      return item;
+    });
+  }
+  updateCartBar();
+
+  // ─── Clean up & close ───
+  _editDishId = null;
+  _editDishOldName = null;
+  document.getElementById('add-dish-overlay').classList.remove('open');
+}
+
+// ── Dish Deletion (syncs manage + menu pages) ──
+async function deleteDish(dishId) {
+  // ★ 先从数据库删除
+  try {
+    await apiDeleteDish(dishId);
+  } catch (err) {
+    console.error('[删除菜品] 失败:', err.message);
+    alert('删除失败: ' + err.message);
+    return;
+  }
+
+  // Remove from data array
+  const idx = DISHES.findIndex(d => d.id === dishId);
+  var dishName = null;
+  if (idx !== -1) {
+    dishName = DISHES[idx].name;
+    DISHES.splice(idx, 1);
+  }
+
+  // Remove DOM elements
+  const mgmtItem = document.querySelector(`.mgmt-item[data-dish="${dishId}"]`);
+  if (mgmtItem) mgmtItem.remove();
+  const dishCard = document.querySelector(`.dish-card[data-dish="${dishId}"]`);
+  if (dishCard) dishCard.remove();
+
+  // Sync cart
+  if (dishName) {
+    appState.cart = appState.cart.filter(item => item.name !== dishName);
+    updateCartBar();
+  }
+}
+// ── 数据驱动渲染 ──
+function renderChefCards() {
+  const container = document.getElementById('chef-list');
+  if (!container) return;
+  const selectedId = appState.selectedChef;
+  container.innerHTML = CHEFS.map(chef => `
+    <div class="chef-card${chef.id === selectedId ? ' selected' : ''}" 
+         data-chef="${chef.id}" onclick="selectChef(this)">
+      <img class="chef-img" src="${chef.img}" alt="${chef.name}">
+      <div class="chef-info">
+        <span class="chef-name">${chef.name}</span>
+        <span class="chef-role">${chef.role}</span>
+        <span class="chef-tag">${chef.tag}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderMenuDishes() {
+  const container = document.getElementById('menu-dish-list');
+  if (!container) return;
+  container.innerHTML = DISHES.map(d => `
+    <div class="dish-card" data-cat="${d.cat}" data-dish="${d.id}">
+      <div class="dish-img" style="background:${d.gradient}"></div>
+      <div class="dish-info">
+        <span class="dish-name">${d.name}</span>
+        <span class="dish-desc">${d.desc}</span>
+        <div class="dish-price-row">
+          <span style="font-family:var(--font-header);font-size:15px">¥${d.price.toFixed(2)}</span>
+          <button class="dish-add-btn" onclick="addToCart('${d.name.replace(/'/g, "\\'")}', ${d.price})">+</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderMgmtDishes() {
+  const container = document.getElementById('mgmt-dish-list');
+  if (!container) return;
+  container.innerHTML = DISHES.map(d => `
+    <div class="mgmt-item" data-cat="${d.cat}" data-dish="${d.id}">
+      <div class="mgmt-img" style="background:${d.gradient}"></div>
+      <div class="mgmt-info">
+        <span class="mgmt-name">${d.name}</span>
+        <span class="mgmt-price">¥${d.price.toFixed(2)}</span>
+      </div>
+      <div class="mgmt-actions">
+        <button class="btn-sm edit" onclick="openEditDish('${d.id}')">编辑</button>
+        <button class="btn-sm danger" onclick="deleteDish('${d.id}')">删除</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function initApp() {
+  renderChefCards();
+  renderMenuDishes();
+  renderMgmtDishes();
+  updateChefHeader();
+  updateCartBar();
+
+  // Self-check: verify data rendered correctly
+  var issues = [];
+  if (!document.querySelector('#chef-list .chef-card')) issues.push('chef-list 无大厨卡片');
+  if (!document.querySelector('#menu-dish-list .dish-card')) issues.push('menu-dish-list 无菜品卡片');
+  if (!document.querySelector('#mgmt-dish-list .mgmt-item')) issues.push('mgmt-dish-list 无管理项');
+  if (issues.length > 0) {
+    document.body.insertAdjacentHTML('afterbegin',
+      '<div style="position:fixed;top:10px;left:10px;right:10px;z-index:99998;background:#ff9800;color:#fff;padding:12px 16px;border-radius:12px;font-size:13px;font-family:monospace">'
+      + '<strong>⚠ 渲染不完整</strong><br>' + issues.join('<br>') + '</div>');
+  }
+}
+
+// ── 页面启动 ──
+// 现在由 data.js 的 loadAppData() 在数据加载完成后自动调用 initApp()
+// 不再在此处同步调用，避免在数据未就绪时渲染空页面
+
+// Self-check 已移入 initApp() 末尾，数据异步加载完成后自动执行
+</script>
+
+</body>
+</html>

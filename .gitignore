@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+build/
+
+# 本项目 — 敏感/临时文件
+server/data.db
+server/uploads/
+server/flask.log
+server/__pycache__/
+.env
+server/.env
+
+# Node
+node_modules/
+
+# 构建产物/压缩包
+dist.rar
+
+# IDE & 工具
+.vscode/
+.idea/
+*.swp
+*.swo
+.codebuddy/
+.workbuddy/
+
+# 系统
+.DS_Store
+Thumbs.db
+nul

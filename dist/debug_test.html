@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script src="test_data.js"></script>
+<script src="data.js"></script>
+</head>
+<body>
+<div id="result"></div>
+<script>
+try {
+  var output = '';
+  output += 'TEST_DATA: ' + (typeof TEST_DATA !== 'undefined' ? 'OK (' + Object.keys(TEST_DATA).join(', ') + ')' : 'UNDEFINED') + '<br>';
+  output += 'CHEFS: ' + (typeof CHEFS !== 'undefined' ? CHEFS.length + ' items' : 'UNDEFINED') + '<br>';
+  output += 'DISHES: ' + (typeof DISHES !== 'undefined' ? DISHES.length + ' items' : 'UNDEFINED') + '<br>';
+  output += 'CATEGORIES: ' + (typeof CATEGORIES !== 'undefined' ? CATEGORIES.length + ' items' : 'UNDEFINED') + '<br>';
+  output += 'DEFAULT_STATE: ' + (typeof DEFAULT_STATE !== 'undefined' ? JSON.stringify(DEFAULT_STATE) : 'UNDEFINED') + '<br>';
+  
+  if (DISHES && DISHES.length > 0) {
+    output += '<br>Dishes:<br>';
+    DISHES.forEach(function(d) { output += '  - ' + d.name + ' (' + d.cat + ', ¥' + d.price + ')<br>'; });
+  }
+  
+  if (CHEFS && CHEFS.length > 0) {
+    output += '<br>Chefs:<br>';
+    CHEFS.forEach(function(c) { output += '  - ' + c.name + ' (' + c.role + ')<br>'; });
+  }
+  
+  document.getElementById('result').innerHTML = output;
+} catch(e) {
+  document.getElementById('result').innerHTML = 'ERROR: ' + e.message + '<br>Stack: ' + e.stack;
+}
+</script>
+</body>
+</html>
