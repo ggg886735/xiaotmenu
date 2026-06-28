@@ -1003,7 +1003,43 @@ body {
   display: block;
 }
 
-/* ── Add Dish Modal ── */
+/* ── Warning Banner for file:// protocol ── */
+.offline-banner {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 99999;
+  background: linear-gradient(135deg, #FF6B6B, #EE5A24);
+  color: #fff;
+  padding: 12px 16px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  animation: slideDown 0.3s ease;
+}
+.offline-banner a {
+  color: #FFEAA7;
+  text-decoration: underline;
+  font-weight: 600;
+}
+.offline-banner .close-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: #fff;
+  width: 24px; height: 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+}
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
 .add-dish-overlay {
   position: absolute;
   top: 0; left: 0;
@@ -1145,7 +1181,11 @@ body {
 </head>
 <body>
 
-<div class="phone">
+<!-- Offline Mode Banner (shown when opened via file:// protocol) -->
+<div id="offline-banner" class="offline-banner" style="display:none">
+  <span id="offline-banner-text"></span>
+  <button class="close-btn" onclick="this.parentElement.style.display='none'">✕</button>
+</div>
 
 <!-- ═══════════ Page 1: 选择虚拟大厨 ═══════════ -->
 <section class="page active" data-page="chef">
@@ -1442,6 +1482,26 @@ const appState = {
   cart: []
 };
 
+// ── Protocol Detection ──
+let _offlineMode = false;
+
+function checkProtocol() {
+  if (window.location.protocol === 'file:') {
+    _offlineMode = true;
+    var banner = document.getElementById('offline-banner');
+    var text = document.getElementById('offline-banner-text');
+    if (banner && text) {
+      text.innerHTML = '⚠️ 当前为离线模式（直接打开了HTML文件）。添加/编辑/删除菜品需要启动后端服务，然后访问 <a href="#" onclick="showLocalhostHint();return false">http://localhost:8080</a>';
+      banner.style.display = 'block';
+    }
+  }
+}
+
+function showLocalhostHint() {
+  alert('请按以下步骤操作：\n\n1. 双击"启动本地服务.bat"启动后端\n2. 在浏览器地址栏输入：http://localhost:8080\n3. 不要直接双击打开HTML文件');
+}
+
+
 // ── Page Switching ──
 function switchPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1613,6 +1673,16 @@ let _addDishImgDataUrl = null;  // stores base64 of uploaded image
 let _editDishId = null;         // non-null when editing
 let _editDishOldName = null;    // for cart sync on name change
 
+// Helper: check if in offline mode (file:// protocol)
+function isOfflineMode() {
+  return _offlineMode;
+}
+
+function showOfflineWarning() {
+  alert('⚠️ 当前为离线模式！\n\n无法直接保存菜品数据。\n\n请按以下步骤操作：\n1. 双击"启动本地服务.bat"启动后端\n2. 在浏览器地址栏输入：http://localhost:8080\n3. 不要直接双击打开HTML文件');
+  return true;
+}
+
 function openAddDishModal() {
   // reset to add mode
   _editDishId = null;
@@ -1715,6 +1785,12 @@ async function confirmAddDish() {
   // If editing, delegate to saveEditDish
   if (_editDishId) {
     saveEditDish();
+    return;
+  }
+
+  // ─── 离线模式检测 ───
+  if (isOfflineMode()) {
+    showOfflineWarning();
     return;
   }
 
@@ -1839,6 +1915,11 @@ function switchMgmtCat(el, cat) {
 
 // ── Edit Dish (syncs manage + menu pages + cart) ──
 async function saveEditDish() {
+  if (isOfflineMode()) {
+    showOfflineWarning();
+    return;
+  }
+
   const dishId = _editDishId;
   if (!dishId) return;
 
@@ -1967,6 +2048,11 @@ async function saveEditDish() {
 
 // ── Dish Deletion (syncs manage + menu pages) ──
 async function deleteDish(dishId) {
+  if (isOfflineMode()) {
+    showOfflineWarning();
+    return;
+  }
+
   // ★ 先从数据库删除
   try {
     await apiDeleteDish(dishId);
@@ -2051,21 +2137,30 @@ function renderMgmtDishes() {
 }
 
 function initApp() {
-  renderChefCards();
-  renderMenuDishes();
-  renderMgmtDishes();
-  updateChefHeader();
-  updateCartBar();
+  // Check if running via file:// protocol
+  checkProtocol();
+
+  // DEBUG: 显示数据加载状态（部署正常后可删除此行）
+  document.body.insertAdjacentHTML('afterbegin',
+    '<div id="debug-info" style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#2196F3;color:#fff;padding:8px 16px;font-size:13px;font-family:monospace;text-align:center">'
+    + 'DEBUG | CHEFS:' + CHEFS.length + ' | DISHES:' + DISHES.length + ' | CATS:' + CATEGORIES.length
+    + '</div>');
+
+  try { renderChefCards(); } catch(e) { console.error('renderChefCards error:', e); }
+  try { renderMenuDishes(); } catch(e) { console.error('renderMenuDishes error:', e); }
+  try { renderMgmtDishes(); } catch(e) { console.error('renderMgmtDishes error:', e); }
+  try { updateChefHeader(); } catch(e) { console.error('updateChefHeader error:', e); }
+  try { updateCartBar(); } catch(e) { console.error('updateCartBar error:', e); }
 
   // Self-check: verify data rendered correctly
   var issues = [];
-  if (!document.querySelector('#chef-list .chef-card')) issues.push('chef-list 无大厨卡片');
-  if (!document.querySelector('#menu-dish-list .dish-card')) issues.push('menu-dish-list 无菜品卡片');
-  if (!document.querySelector('#mgmt-dish-list .mgmt-item')) issues.push('mgmt-dish-list 无管理项');
+  if (!document.querySelector('#chef-list .chef-card')) issues.push('chef-list no cards');
+  if (!document.querySelector('#menu-dish-list .dish-card')) issues.push('menu-dish-list no dishes (DISHES=' + DISHES.length + ')');
+  if (!document.querySelector('#mgmt-dish-list .mgmt-item')) issues.push('mgmt-dish-list no items');
   if (issues.length > 0) {
-    document.body.insertAdjacentHTML('afterbegin',
-      '<div style="position:fixed;top:10px;left:10px;right:10px;z-index:99998;background:#ff9800;color:#fff;padding:12px 16px;border-radius:12px;font-size:13px;font-family:monospace">'
-      + '<strong>⚠ 渲染不完整</strong><br>' + issues.join('<br>') + '</div>');
+    var dbg = document.getElementById('debug-info');
+    if (dbg) dbg.style.background = '#f44336';
+    dbg.innerHTML = 'ISSUES: ' + issues.join(' | ') + ' | DEBUG | CHEFS:' + CHEFS.length + ' | DISHES:' + DISHES.length + ' | CATS:' + CATEGORIES.length;
   }
 }
 
