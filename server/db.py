@@ -87,10 +87,12 @@ class DBConnection:
 
 
 def _is_mysql():
-    return DATABASE_URL.startswith("mysql://")
+    return DATABASE_URL.startswith("mysql://") and not _FALLBACK_TO_SQLITE
 
 
 def get_db_type():
+    if _FALLBACK_TO_SQLITE:
+        return "sqlite"
     return "mysql" if _is_mysql() else "sqlite"
 
 
@@ -108,8 +110,14 @@ def _find_ssl_ca():
     return None
 
 
+# 全局降级标志：MySQL 连接失败后自动切换到 SQLite
+_FALLBACK_TO_SQLITE = False
+
+
 def get_db():
-    if _is_mysql():
+    global _FALLBACK_TO_SQLITE
+
+    if _is_mysql() and not _FALLBACK_TO_SQLITE:
         if not HAS_PYMYSQL:
             raise RuntimeError(
                 "TiDB/MySQL 模式需要 PyMySQL 库，请执行：pip install pymysql"
@@ -123,25 +131,32 @@ def get_db():
         if ssl_ca:
             ssl_params = {"ssl": {"ca": ssl_ca}}
 
-        raw = pymysql.connect(
-            host=parsed.hostname or "127.0.0.1",
-            port=parsed.port or 4000,
-            user=parsed.username or "root",
-            password=parsed.password or "",
-            database=parsed.path.lstrip("/"),
-            charset="utf8mb4",
-            cursorclass=pymysql.cursors.DictCursor,
-            connect_timeout=10,
-            read_timeout=30,
-            write_timeout=30,
-            **ssl_params,
-        )
-        return DBConnection(raw, "mysql")
-    else:
-        raw = sqlite3.connect(DB_PATH)
-        raw.row_factory = sqlite3.Row
-        raw.execute("PRAGMA foreign_keys = ON")
-        return DBConnection(raw, "sqlite")
+        try:
+            raw = pymysql.connect(
+                host=parsed.hostname or "127.0.0.1",
+                port=parsed.port or 4000,
+                user=parsed.username or "root",
+                password=parsed.password or "",
+                database=parsed.path.lstrip("/"),
+                charset="utf8mb4",
+                cursorclass=pymysql.cursors.DictCursor,
+                connect_timeout=10,
+                read_timeout=30,
+                write_timeout=30,
+                **ssl_params,
+            )
+            return DBConnection(raw, "mysql")
+        except Exception as e:
+            # 连接失败 → 自动降级到 SQLite（PythonAnywhere 等平台可能封禁非标准端口）
+            print(f"[db] WARNING: MySQL/TiDB 连接失败 ({e})")
+            print("[db] 自动降级为 SQLite 模式（数据将保存在本地 data.db 文件）")
+            _FALLBACK_TO_SQLITE = True
+
+    # SQLite 降级模式 / 默认本地模式
+    raw = sqlite3.connect(DB_PATH)
+    raw.row_factory = sqlite3.Row
+    raw.execute("PRAGMA foreign_keys = ON")
+    return DBConnection(raw, "sqlite")
 
 
 def close_db(conn):
