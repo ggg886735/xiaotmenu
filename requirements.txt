@@ -1,0 +1,6 @@
+# 根目录 requirements.txt（Railway 会自动识别）
+# 依赖列表与 server/requirements.txt 保持一致
+flask==3.1.3
+flask-cors==6.0.5
+pymysql>=1.1.0
+gunicorn>=21.0.0
